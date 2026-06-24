@@ -1,0 +1,81 @@
+id: research_lead
+name: "Research Lead"
+version: "1.0"
+model: claude-sonnet-4-6
+reports_to: chief_of_staff
+color: "#a855f7"
+avatar_initials: "RL"
+
+mcps:
+  - filesystem        # read architecture docs, ADRs, specs
+  - github            # read issues, PRs for research context
+  - fetch             # fetch any URL — DuckDuckGo search, NSE data, documentation, news
+  - memory            # read/write research findings to company knowledge
+  - sqlite            # read task DB
+
+repos:
+  - path: "D:\\AI_OS\\09_docs"
+    access: read_write
+    notes: "Write ADRs here for architecture decisions"
+  - path: "D:\\AI_OS\\01_memory"
+    access: read_write
+    notes: "Write research findings, competitor intel, opportunity log"
+  - path: "D:\\AI_OS\\04_projects\\Quantara"
+    access: read_only
+    scope: "CLAUDE.md, configs/, 06_agents/quantara/QUANTARA_OS_MASTER.md"
+  - path: "D:\\AI_OS\\06_agents"
+    access: read_only
+
+skills:
+  - claude-api        # reference for LLM/API decisions
+  - find-skills       # discover new capabilities
+
+permissions:
+  can_write_adrs: true
+  can_write_memory: true
+  can_write_code: false
+  can_modify_production: false
+  can_approve_strategy_changes: false
+
+open_design_questions:
+  # These block Quantara Stage 1 — must be resolved before live capital
+  - id: dq_001
+    question: "Zerodha TOTP token refresh — automated Playwright vs semi-manual 8 AM alert?"
+    blocking: "Stage 1 live capital"
+    status: open
+  - id: dq_002
+    question: "Fill timeout at 45s — wait and convert to MARKET or cancel?"
+    blocking: "Stage 1 live capital"
+    status: open
+  - id: dq_003
+    question: "NSE holiday calendar — official data source?"
+    blocking: "Stage 1 live capital"
+    status: open
+  - id: dq_004
+    question: "Primary options chain data source — Zerodha API or external (Sensibull/Opstra)?"
+    blocking: "Stage 1 live capital"
+    status: open
+  - id: dq_005
+    question: "Paper trading success criteria — exact Sharpe threshold, win rate, min sample size?"
+    blocking: "Stage 1 live capital"
+    status: open
+  - id: dq_006
+    question: "Learning reviewer identity and approval process for parameter_recommendations?"
+    blocking: "Stage 1 live capital"
+    status: open
+  - id: dq_007
+    question: "Max capital at risk per day in absolute rupees (Stage 1)?"
+    blocking: "Stage 1 live capital"
+    status: open
+  - id: dq_008
+    question: "Emergency flatten access if main Quantara backend crashes?"
+    blocking: "Stage 1 live capital"
+    status: open
+
+research_domains:
+  - SEBI compliance and F&O regulations
+  - Options chain data providers (NSE, Sensibull, Opstra)
+  - Market microstructure (NIFTY options, weekly expiry)
+  - AI/ML model selection (Ollama vs Anthropic per task type)
+  - Competitor analysis (signal platforms, algo trading SaaS)
+  - CareerPilot market intelligence (job market data APIs)

@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude MCP × TradingView — Setup Guide | @ai_snipp</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --brand-amber:   #F59E0B;
+    --brand-dark:    #111111;
+    --brand-emerald: #10B981;
+    --text-primary:  #1A1A1A;
+    --text-secondary:#4B5563;
+    --text-muted:    #6B7280;
+    --bg-code:       #1A1A1A;
+    --bg-code-text:  #E5E7EB;
+    --bg-note:       #FFFBEB;
+    --border-note:   #F59E0B;
+    --bg-warning:    #FFF1F2;
+    --border-warning:#F43F5E;
+    --border-light:  #E5E7EB;
+    --step-size:     40px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    background: #fff;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 40px 60px;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    border-bottom: 3px solid var(--brand-amber);
+    padding-bottom: 28px;
+    margin-bottom: 36px;
+  }
+
+  .brand-tag {
+    display: inline-block;
+    background: var(--brand-dark);
+    color: var(--brand-amber);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  .guide-title {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--brand-dark);
+    margin-bottom: 8px;
+  }
+
+  .guide-title span {
+    color: var(--brand-amber);
+  }
+
+  .guide-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-bottom: 20px;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .meta-item strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  /* ─── WHAT THIS DOES ─── */
+  .intro-box {
+    background: var(--brand-dark);
+    color: #F3F4F6;
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 36px;
+  }
+
+  .intro-box h2 {
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand-amber);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .intro-box p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #D1D5DB;
+    margin-bottom: 12px;
+  }
+
+  .intro-box p:last-child { margin-bottom: 0; }
+
+  .capability-list {
+    list-style: none;
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+  }
+
+  .capability-list li {
+    font-size: 13px;
+    color: #D1D5DB;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .capability-list li::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--brand-emerald);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ─── PREREQUISITES ─── */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand-amber);
+    margin-bottom: 14px;
+  }
+
+  .prereq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .prereq-card {
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+
+  .prereq-card .req-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+
+  .prereq-card .req-detail {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .req-required {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fff;
+    background: #EF4444;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* ─── STEPS ─── */
+  .step-block {
+    margin-bottom: 32px;
+    padding-left: 0;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .step-number {
+    flex-shrink: 0;
+    width: var(--step-size);
+    height: var(--step-size);
+    background: var(--brand-dark);
+    color: var(--brand-amber);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step-title-group {
+    padding-top: 6px;
+  }
+
+  .step-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--brand-dark);
+    line-height: 1.2;
+    margin-bottom: 3px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .step-content {
+    padding-left: calc(var(--step-size) + 16px);
+  }
+
+  .step-content p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  .step-content ol, .step-content ul {
+    padding-left: 20px;
+    margin-bottom: 14px;
+  }
+
+  .step-content li {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    line-height: 1.6;
+  }
+
+  .step-content li strong {
+    color: var(--text-primary);
+  }
+
+  /* ─── CODE BLOCKS ─── */
+  .code-block {
+    background: var(--bg-code);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 12px 0;
+    overflow-x: auto;
+  }
+
+  .code-block .code-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 8px;
+  }
+
+  .code-block code {
+    display: block;
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--bg-code-text);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .code-block code .comment { color: #6B7280; }
+  .code-block code .key     { color: #93C5FD; }
+  .code-block code .string  { color: #86EFAC; }
+  .code-block code .cmd     { color: #FDE68A; }
+  .code-block code .out     { color: #9CA3AF; }
+  .code-block code .hi      { color: var(--brand-amber); font-weight: 600; }
+
+  /* inline code */
+  code {
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    font-size: 12px;
+    background: #F3F4F6;
+    color: #B45309;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ─── NOTE / WARNING BOXES ─── */
+  .note-box {
+    border-left: 3px solid var(--border-note);
+    background: var(--bg-note);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13px;
+    color: #92400E;
+  }
+
+  .note-box strong { color: #78350F; }
+
+  .warning-box {
+    border-left: 3px solid var(--border-warning);
+    background: var(--bg-warning);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13px;
+    color: #9F1239;
+  }
+
+  .warning-box strong { color: #881337; }
+
+  /* ─── VERIFICATION ─── */
+  .verify-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+  }
+
+  .verify-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--brand-emerald);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .verify-row p {
+    font-size: 13px;
+    color: #14532D;
+    margin: 0 !important;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border-light);
+    margin: 28px 0;
+  }
+
+  /* ─── STARTER PROMPTS ─── */
+  .prompt-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .prompt-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .prompt-item:last-child { border-bottom: none; }
+
+  .prompt-num {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: #F3F4F6;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+
+  .prompt-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #1E40AF;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 6px;
+    padding: 8px 12px;
+    flex: 1;
+  }
+
+  /* ─── IMPORTANT NOTES ─── */
+  .notes-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .notes-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 16px;
+    background: #FAFAFA;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+  }
+
+  .notes-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    line-height: 1.5;
+  }
+
+  .notes-content {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .notes-content strong { color: var(--text-primary); }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 3px solid var(--brand-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .footer-logo {
+    width: 36px;
+    height: 36px;
+    background: var(--brand-amber);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 16px;
+    color: var(--brand-dark);
+    letter-spacing: -0.05em;
+  }
+
+  .footer-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand-dark);
+  }
+
+  .footer-tagline {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .footer-right {
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  .footer-right a {
+    color: var(--brand-amber);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* ─── PRINT ─── */
+  @media print {
+    body { padding: 30px 36px 50px; }
+    .intro-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .code-block { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .step-number { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .brand-tag { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .verify-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .note-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .warning-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .prereq-card { border: 1px solid #E5E7EB !important; }
+    a { text-decoration: none; color: inherit; }
+    .step-block { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div class="brand-tag">@ai_snipp — Setup Guide</div>
+  <h1 class="guide-title">Claude MCP × <span>TradingView</span><br>Setup Guide</h1>
+  <p class="guide-subtitle">Connect Claude directly to TradingView Desktop — write Pine Script, analyze charts, and set alerts from a conversation.</p>
+  <div class="meta-row">
+    <div class="meta-item"><strong>Time to complete:</strong> Under 10 minutes</div>
+    <div class="meta-item"><strong>Difficulty:</strong> Beginner–Intermediate</div>
+    <div class="meta-item"><strong>Platform:</strong> Windows / macOS / Linux</div>
+  </div>
+</div>
+
+<!-- ── WHAT THIS DOES ── -->
+<div class="intro-box">
+  <h2>What This Setup Does</h2>
+  <p>This connects Claude AI to your live TradingView Desktop session via MCP (Model Context Protocol). Once connected, Claude can operate TradingView directly — reading chart data, writing indicators, and compiling Pine Script in real-time.</p>
+  <p>No more manually pasting screenshots or copying code. Claude works inside your TradingView session.</p>
+  <ul class="capability-list">
+    <li>Write and compile Pine Script live</li>
+    <li>Analyze current chart formations</li>
+    <li>Fix indicator errors in real-time</li>
+    <li>Draw trendlines and Fibonacci levels</li>
+    <li>Set and manage alerts by voice</li>
+    <li>Read live OHLCV + indicator values</li>
+    <li>Change symbols and timeframes</li>
+    <li>Screenshot charts for analysis</li>
+  </ul>
+</div>
+
+<!-- ── PREREQUISITES ── -->
+<div class="section">
+  <div class="section-label">Before You Start — Requirements</div>
+  <div class="prereq-grid">
+    <div class="prereq-card">
+      <div class="req-name">TradingView Desktop <span class="req-required">Required</span></div>
+      <div class="req-detail">The Desktop app — not the browser version. Requires a paid plan (Essential tier minimum, ~$12.95/mo billed annually). Download from your TradingView account page.</div>
+    </div>
+    <div class="prereq-card">
+      <div class="req-name">Claude Code or Claude Pro <span class="req-required">Required</span></div>
+      <div class="req-detail">Claude Code (CLI tool, available with Pro at $20/mo) or Claude Desktop. The free Claude tier cannot use MCP servers.</div>
+    </div>
+    <div class="prereq-card">
+      <div class="req-name">Node.js 18 or above <span class="req-required">Required</span></div>
+      <div class="req-detail">Download from nodejs.org. Verify by opening a terminal and running: <code>node --version</code>. You need v18.0.0 or higher.</div>
+    </div>
+    <div class="prereq-card">
+      <div class="req-name">Git</div>
+      <div class="req-detail">For cloning the MCP repository. Download from git-scm.com if not already installed. Most developers already have this.</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── STEP 1 ── -->
+<div class="step-block">
+  <div class="step-header">
+    <div class="step-number">01</div>
+    <div class="step-title-group">
+      <div class="step-title">Install the MCP Server</div>
+      <div class="step-desc">Clone the repo, install dependencies, and add the debug flag to TradingView</div>
+    </div>
+  </div>
+  <div class="step-content">
+    <p><strong>1a. Clone the repository and install</strong></p>
+    <p>Open a terminal (PowerShell on Windows, Terminal on Mac) and run these two commands in sequence:</p>
+
+    <div class="code-block">
+      <div class="code-label">Terminal</div>
+      <code><span class="cmd">git clone https://github.com/tradesdontlie/tradingview-mcp</span>
+<span class="out">Cloning into 'tradingview-mcp'...
+Resolving deltas: 100% (47/47), done.</span>
+
+<span class="cmd">cd tradingview-mcp</span>
+<span class="cmd">npm install</span>
+<span class="out">added 23 packages in 4.2s</span></code>
+    </div>
+
+    <p>Note the full path of the folder you cloned into — you will need it in Step 2. For example: <code>C:\Users\YourName\tradingview-mcp</code></p>
+
+    <p><strong>1b. Add the debug flag to TradingView Desktop (Windows)</strong></p>
+    <p>TradingView Desktop must launch with a special debug flag that allows external connections. This is done by modifying the shortcut:</p>
+    <ol>
+      <li>Find the TradingView Desktop shortcut (Start Menu or Desktop)</li>
+      <li>Right-click → <strong>Properties</strong></li>
+      <li>Click inside the <strong>Target</strong> field and go to the very end of the text</li>
+      <li>Add a space, then paste exactly: <code>--remote-debugging-port=9222</code></li>
+      <li>The full Target field should look like this:</li>
+    </ol>
+
+    <div class="code-block">
+      <div class="code-label">Windows — Shortcut Target Field</div>
+      <code>"C:\Users\YourName\AppData\Local\TradingView\TradingView.exe" <span class="hi">--remote-debugging-port=9222</span></code>
+    </div>
+
+    <ol start="6">
+      <li>Click <strong>Apply</strong> → <strong>OK</strong></li>
+      <li>From now on, always launch TradingView using this shortcut</li>
+    </ol>
+
+    <p><strong>macOS equivalent</strong> — run this in Terminal instead of using the app icon:</p>
+    <div class="code-block">
+      <div class="code-label">macOS — Terminal</div>
+      <code>/Applications/TradingView.app/Contents/MacOS/TradingView <span class="hi">--remote-debugging-port=9222</span></code>
+    </div>
+
+    <div class="note-box">
+      <strong>Tip:</strong> On macOS, create a shell alias for this command so you don't type it every time. Add <code>alias tv='/Applications/TradingView.app/Contents/MacOS/TradingView --remote-debugging-port=9222'</code> to your <code>~/.zshrc</code> file, then run <code>tv</code> from terminal to launch.
+    </div>
+  </div>
+</div>
+
+<!-- ── STEP 2 ── -->
+<div class="step-block">
+  <div class="step-header">
+    <div class="step-number">02</div>
+    <div class="step-title-group">
+      <div class="step-title">Configure Claude Code</div>
+      <div class="step-desc">Add one JSON block to Claude's MCP config file</div>
+    </div>
+  </div>
+  <div class="step-content">
+    <p>Claude Code reads its MCP server list from a config file at <code>~/.claude/.mcp.json</code>. You need to add the TradingView server to that file.</p>
+
+    <p><strong>File location:</strong></p>
+    <ul>
+      <li><strong>Windows:</strong> <code>C:\Users\YourName\.claude\.mcp.json</code></li>
+      <li><strong>macOS / Linux:</strong> <code>~/.claude/.mcp.json</code></li>
+    </ul>
+
+    <p>Open the file in any text editor (VS Code, Notepad, etc.). If the file doesn't exist, create it. Add or merge this configuration:</p>
+
+    <div class="code-block">
+      <div class="code-label">.mcp.json — Full Configuration</div>
+      <code>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"tradingview"</span>: {
+      <span class="key">"command"</span>: <span class="string">"node"</span>,
+      <span class="key">"args"</span>: [<span class="string"><span class="hi">"C:/Users/YourName/tradingview-mcp/index.js"</span></span>]
+    }
+  }
+}</code>
+    </div>
+
+    <div class="note-box">
+      <strong>Important:</strong> Replace the path in <code>args</code> with the actual path where you cloned the repo in Step 1. Use forward slashes (<code>/</code>) even on Windows. Example: <code>"C:/Users/Dell/tradingview-mcp/index.js"</code>
+    </div>
+
+    <p>If your <code>.mcp.json</code> already has other MCP servers configured, add the <code>"tradingview"</code> block inside the existing <code>"mcpServers"</code> object — do not replace the whole file.</p>
+
+    <p>After saving the file, <strong>restart Claude Code completely</strong> (Ctrl+C to stop, relaunch). MCP servers are only loaded at startup.</p>
+
+    <p><strong>Using Claude Desktop instead of Claude Code?</strong> The config file is at <code>~/Library/Application Support/Claude/claude_desktop_config.json</code> on macOS and <code>%APPDATA%\Claude\claude_desktop_config.json</code> on Windows. The JSON structure is identical.</p>
+  </div>
+</div>
+
+<!-- ── STEP 3 ── -->
+<div class="step-block">
+  <div class="step-header">
+    <div class="step-number">03</div>
+    <div class="step-title-group">
+      <div class="step-title">Launch, Verify, and Use</div>
+      <div class="step-desc">Open both apps and confirm the connection is live</div>
+    </div>
+  </div>
+  <div class="step-content">
+    <p><strong>Launch sequence (order matters):</strong></p>
+    <ol>
+      <li>Launch <strong>TradingView Desktop</strong> using the debug shortcut you created in Step 1</li>
+      <li>Wait for it to fully load, then open a chart — any symbol (<code>NIFTY</code>, <code>BANKNIFTY</code>, etc.)</li>
+      <li>The chart tab must be active. The New Tab / welcome screen will not work.</li>
+      <li>Open <strong>Claude Code</strong> in your terminal</li>
+    </ol>
+
+    <p><strong>Verify the connection:</strong></p>
+    <p>In Claude Code, type:</p>
+    <div class="code-block">
+      <div class="code-label">Claude Code</div>
+      <code>tv_health_check</code>
+    </div>
+
+    <div class="verify-row">
+      <div class="verify-dot"></div>
+      <p>Expected response: <code>cdp_connected: true</code> — you are live. Claude can now read and control TradingView.</p>
+    </div>
+
+    <div class="warning-box">
+      <strong>If you see cdp_connected: false:</strong> TradingView was not launched with the debug flag. Close TradingView completely, re-launch using the modified shortcut from Step 1, ensure an active chart is open, then run <code>tv_health_check</code> again.
+    </div>
+
+    <p><strong>You are connected.</strong> 78 TradingView tools are now available to Claude. Start with the prompts in the next section.</p>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── STARTER PROMPTS ── -->
+<div class="section">
+  <div class="section-label">5 Starter Prompts to Try Right Now</div>
+  <ul class="prompt-list">
+    <li class="prompt-item">
+      <div class="prompt-num">1</div>
+      <div class="prompt-text">Write me a Heikin Ashi momentum indicator for NIFTY 15m — mark strong bull candles in green, strong bear candles in red, neutral candles in grey</div>
+    </li>
+    <li class="prompt-item">
+      <div class="prompt-num">2</div>
+      <div class="prompt-text">Analyze the current chart — what is the setup? Is there a trade here based on what you can see?</div>
+    </li>
+    <li class="prompt-item">
+      <div class="prompt-num">3</div>
+      <div class="prompt-text">My Pine Script indicator is generating too many false signals. Here is the code: [paste your code]. Find the problem and fix it.</div>
+    </li>
+    <li class="prompt-item">
+      <div class="prompt-num">4</div>
+      <div class="prompt-text">Draw Fibonacci retracement levels on the current NIFTY chart from the last major swing high to the last major swing low</div>
+    </li>
+    <li class="prompt-item">
+      <div class="prompt-num">5</div>
+      <div class="prompt-text">Set an alert on the current chart for when price closes above the 20 EMA on the 15-minute timeframe. Alert name: "EMA Breakout"</div>
+    </li>
+  </ul>
+</div>
+
+<hr class="divider">
+
+<!-- ── IMPORTANT NOTES ── -->
+<div class="section">
+  <div class="section-label">Important — Read Before Using in Live Trading</div>
+  <div class="notes-grid">
+    <div class="notes-item">
+      <div class="notes-icon">⚠️</div>
+      <div class="notes-content">
+        <strong>Unofficial integration.</strong> This uses TradingView's internal Electron debug interface — the same protocol used by browser DevTools. TradingView does not officially support or sanction this connection. Any TradingView Desktop update can break it without warning.
+      </div>
+    </div>
+    <div class="notes-item">
+      <div class="notes-icon">🔧</div>
+      <div class="notes-content">
+        <strong>If it breaks after a TradingView update</strong>, check the GitHub repo for a fix: <code>github.com/tradesdontlie/tradingview-mcp</code>. The community-maintained Jackson fork at <code>github.com/LewisWJackson/tradingview-mcp-jackson</code> was specifically created to fix issues introduced in TradingView Desktop v2.14+.
+      </div>
+    </div>
+    <div class="notes-item">
+      <div class="notes-icon">🔒</div>
+      <div class="notes-content">
+        <strong>Data privacy.</strong> Chart data and any strategy text you describe in prompts will pass through Anthropic's API servers. Your TradingView login credentials are never accessed or transmitted. Do not paste sensitive account information into prompts.
+      </div>
+    </div>
+    <div class="notes-item">
+      <div class="notes-icon">📈</div>
+      <div class="notes-content">
+        <strong>No live order execution.</strong> This MCP can read charts and control the TradingView interface, but it cannot place real orders or connect to your broker. It is analysis and scripting only — not automated trading.
+      </div>
+    </div>
+    <div class="notes-item">
+      <div class="notes-icon">💰</div>
+      <div class="notes-content">
+        <strong>Cost to run.</strong> Minimum working stack: TradingView Essential (~$12.95/mo) + Claude Pro ($20/mo) = ~$33/mo. Claude Pro hits usage limits under heavy automated use. For full-day usage without caps, Claude Max 5x ($100/mo) is recommended.
+      </div>
+    </div>
+    <div class="notes-item">
+      <div class="notes-icon">🖥️</div>
+      <div class="notes-content">
+        <strong>Both apps must be open simultaneously.</strong> TradingView Desktop must remain open on an active chart tab (not the welcome screen) the entire time you are using the MCP tools. Closing or minimizing to the welcome screen will disconnect Claude.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<div class="footer">
+  <div class="footer-brand">
+    <div class="footer-logo">ai</div>
+    <div>
+      <div class="footer-name">@ai_snipp</div>
+      <div class="footer-tagline">Daily AI workflows for traders and builders</div>
+    </div>
+  </div>
+  <div class="footer-right">
+    Follow on Instagram for more setups<br>
+    <a href="https://instagram.com/ai_snipp">instagram.com/ai_snipp</a>
+  </div>
+</div>
+
+</body>
+</html>

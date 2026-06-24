@@ -1,0 +1,90 @@
+app:
+  name: CareerPilot
+  version: "1.0.0"
+  debug: false
+  host: "0.0.0.0"
+  port: 8005
+
+database:
+  url: "${DATABASE_URL}"
+  pool_size: 10
+  max_overflow: 20
+
+ai:
+  provider: anthropic
+  reasoning_model: "claude-sonnet-4-6"
+  throughput_model: "claude-haiku-4-5-20251001"
+  max_tokens: 4096
+  resume_cache_ttl: 3600
+
+scheduler:
+  job_discovery_cron: "0 8 * * *"      # 8 AM daily
+  email_poll_interval: 300              # 5 min fallback if push fails
+  apply_window_start: "09:00"
+  apply_window_end: "18:00"
+  timezone: "Asia/Kolkata"
+
+apply_limits:
+  linkedin:
+    daily_max: 25
+    delay_between_applications_sec: 45
+    easy_apply_only: true
+  naukri:
+    daily_max: 20
+    delay_between_applications_sec: 30
+  indeed:
+    daily_max: 15
+    delay_between_applications_sec: 60
+  company:
+    daily_max: 10
+    delay_between_applications_sec: 90
+
+scraper:
+  max_jobs_per_platform_per_run: 100
+  lookback_days: 3
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  headless: false
+  playwright_timeout_ms: 60000
+
+resume:
+  output_dir: "resumes/variants"
+  base_dir: "resumes/base"
+  ats_min_score: 65           # below this, Claude rewrites before applying
+  max_pages: 2
+
+gmail:
+  scopes:
+    - "https://www.googleapis.com/auth/gmail.readonly"
+    - "https://www.googleapis.com/auth/gmail.modify"
+  token_path: "config/gmail_token.json"
+  credentials_path: "config/gmail_credentials.json"
+  watch_label: "INBOX"
+  career_filter_keywords:
+    - "interview"
+    - "application"
+    - "opportunity"
+    - "position"
+    - "offer"
+    - "assessment"
+    - "shortlist"
+    - "selected"
+    - "rejected"
+    - "regret"
+    - "hire"
+    - "recruiter"
+
+notifications:
+  telegram:
+    enabled: true
+    notify_on:
+      - interview_invite
+      - offer
+      - new_high_match_job
+  in_app:
+    enabled: true
+    websocket_heartbeat_sec: 30
+
+blacklist:
+  companies: []
+  title_keywords: []
+  locations: []

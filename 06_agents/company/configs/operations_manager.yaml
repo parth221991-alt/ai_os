@@ -1,0 +1,109 @@
+id: operations_manager
+name: "Operations Manager"
+version: "1.0"
+model: claude-haiku-4-5-20251001
+reports_to: chief_of_staff
+color: "#f59e0b"
+avatar_initials: "OM"
+
+mcps:
+  - filesystem        # read logs, health endpoints, .env.example files
+  - sqlite            # read/write task DB + read Quantara ops data
+  - memory            # read incident history, escalation rules
+
+repos:
+  - path: "D:\\AI_OS\\04_projects\\Quantara"
+    access: read_only
+    scope: "logs/, configs/, .env.example"
+  - path: "D:\\OptionHABot"
+    access: read_only
+    scope: "logs/, .env.example"
+  - path: "D:\\Trading_bot_a"
+    access: read_only
+    scope: "logs/, .env.example"
+  - path: "D:\\AI_OS\\04_projects\\TradingCopilot"
+    access: read_only
+    scope: ".env.example — NEVER read .env"
+  - path: "D:\\AI_OS\\00_dashboard"
+    access: read_write
+    scope: "tasks.db, activity logs"
+
+skills:
+  - schedule          # schedule monitoring routines
+
+permissions:
+  can_read_logs: true
+  can_read_health_endpoints: true
+  can_write_incident_log: true
+  can_assign_tasks: true
+  can_modify_code: false
+  can_touch_live_trading: false      # monitor only, never modify
+  can_read_secrets: false            # never read .env files
+
+monitoring_endpoints:
+  - name: "Quantara"
+    url: "http://localhost:8000/health"
+    alert_if_down_minutes: 1
+    market_hours_only: true
+  - name: "OptionHABot"
+    url: "http://localhost:8004/health"
+    alert_if_down_minutes: 1
+    market_hours_only: true
+  - name: "TradingBotA"
+    url: "http://localhost:8765/health"
+    alert_if_down_minutes: 5
+    market_hours_only: true
+  - name: "TradeCopilot (Supabase)"
+    url: "https://supabase.io/dashboard"
+    alert_if_down_minutes: 10
+    market_hours_only: false
+  - name: "AI_OS Dashboard"
+    url: "http://localhost:8006/health"
+    alert_if_down_minutes: 30
+    market_hours_only: false
+
+compliance_register:
+  - item: "Groq key in TradeCopilot frontend"
+    status: open
+    priority: P1
+    action: "Migrate to server-side Supabase Edge Function"
+  - item: "Razorpay live key git history check"
+    status: open
+    priority: P1
+    action: "Check git log; rotate if ever committed"
+  - item: "Quantara paper gate (execution_enabled: false)"
+    status: compliant
+    priority: critical
+    action: "Verify on every startup"
+
+cost_tracking:
+  services:
+    - name: Anthropic API
+      billing: monthly
+      tag_by_project: true
+    - name: AWS Lightsail
+      billing: monthly
+    - name: Supabase
+      billing: monthly
+      note: "Free tier — alert if approaching limits"
+
+port_assignments:
+  - project: Quantara
+    backend: 8000
+    emergency: 8001
+    oauth: 8002
+  - project: TradingBotwithAIAnalyzer
+    backend: 8003
+    frontend: 3002
+  - project: OptionHABot
+    backend: 8004
+    frontend: 3001
+  - project: CareerPilot
+    backend: 8005
+    frontend: 3003
+  - project: AI_OS_Dashboard
+    backend: 8006
+  - project: TradingBotA
+    backend: 8765
+  - project: TradeCopilot
+    frontend: 3000

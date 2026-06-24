@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AI_OS Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--s1:#111113;--s2:#18181b;--s3:#27272a;--s4:#3f3f46;
+  --t1:#fafafa;--t2:#a1a1aa;--t3:#52525b;--t4:#3f3f46;
+  --indigo:#6366f1;--emerald:#10b981;--amber:#f59e0b;
+  --violet:#a855f7;--blue:#3b82f6;--pink:#ec4899;
+  --red:#ef4444;--orange:#f97316;
+  --sans:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5;font-size:13px}
+a{color:inherit;text-decoration:none}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+
+/* ── animations ── */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes slide-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.reveal{animation:slide-up .3s ease both}
+.fade{animation:fade-in .2s ease both}
+.pulse{animation:pulse 2s ease-in-out infinite}
+
+/* ── base components ── */
+.card{background:var(--s1);border:1px solid var(--s3);border-radius:12px;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--s4);transform:translateY(-1px)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:5px;font-size:10px;font-family:var(--mono);font-weight:500;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block}
+.dot-sm{width:5px;height:5px;border-radius:50%;flex-shrink:0;display:inline-block}
+.skel{background:linear-gradient(90deg,var(--s1) 25%,var(--s2) 50%,var(--s1) 75%);background-size:200%;animation:shimmer 1.5s infinite;border-radius:4px}
+.btn{cursor:pointer;border:1px solid var(--s3);background:var(--s2);color:var(--t2);border-radius:7px;padding:5px 12px;font-size:11px;font-family:var(--mono);transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--s3);color:var(--t1);border-color:var(--s4)}
+.btn-primary{background:rgba(99,102,241,.15);border-color:rgba(99,102,241,.4);color:var(--indigo)}
+.btn-primary:hover{background:rgba(99,102,241,.25);border-color:var(--indigo)}
+.btn-emerald{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3);color:var(--emerald)}
+.btn-emerald:hover{background:rgba(16,185,129,.2)}
+.btn-sm{padding:3px 8px;font-size:9px}
+.inp{width:100%;background:var(--bg);border:1px solid var(--s3);border-radius:8px;color:var(--t1);font-size:12px;font-family:var(--sans);padding:7px 11px;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--indigo)}
+select.inp option{background:var(--s1)}
+textarea.inp{resize:vertical;min-height:60px}
+.sec-label{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
+.row{display:flex;align-items:center;gap:8px}
+.col{display:flex;flex-direction:column}
+.between{display:flex;align-items:center;justify-content:space-between}
+.flex1{flex:1}
+.trunc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trunc2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ── agent avatar ── */
+.av{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;flex-shrink:0}
+
+/* ── priority bars ── */
+.p0-l{border-left:2px solid var(--red)}
+.p1-l{border-left:2px solid var(--orange)}
+.p2-l{border-left:2px solid var(--indigo)}
+.p3-l{border-left:2px solid var(--s4)}
+
+/* ── modal ── */
+.overlay{position:fixed;inset:0;background:rgba(9,9,11,.85);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--s3);border-radius:16px;padding:24px;width:460px;max-width:95vw;max-height:88vh;overflow-y:auto;animation:slide-up .2s ease}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header style="position:fixed;top:0;left:0;right:0;z-index:50;height:52px;background:rgba(9,9,11,.97);border-bottom:1px solid var(--s3);backdrop-filter:blur(12px);display:flex;align-items:center;padding:0 24px;gap:16px">
+  <div class="row" style="gap:8px;flex-shrink:0">
+    <div style="width:30px;height:30px;background:var(--indigo);border-radius:9px;display:flex;align-items:center;justify-content:center">
+      <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#fff">AI</span>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:.03em;line-height:1">AI_OS</div>
+      <div style="font-size:9px;color:var(--t3);letter-spacing:.1em">COMMAND CENTER</div>
+    </div>
+  </div>
+
+  <div style="width:1px;height:20px;background:var(--s3)"></div>
+
+  <div class="row" style="gap:6px">
+    <div id="conn-dot" class="dot pulse" style="background:var(--red)"></div>
+    <span id="conn-lbl" style="font-family:var(--mono);font-size:10px;color:var(--t3)">CONNECTING</span>
+  </div>
+
+  <div style="flex:1"></div>
+
+  <div class="row" style="gap:12px">
+    <span id="hdr-open" style="font-size:11px;color:var(--t3)">—</span>
+    <div style="width:1px;height:14px;background:var(--s3)"></div>
+    <span id="hdr-active" style="font-size:11px;color:var(--t3)">—</span>
+    <div style="width:1px;height:14px;background:var(--s3)"></div>
+    <span id="hdr-systems" style="font-size:11px;color:var(--t3)">—</span>
+  </div>
+
+  <div style="width:1px;height:20px;background:var(--s3)"></div>
+
+  <div style="text-align:right;flex-shrink:0">
+    <div id="clock" style="font-family:var(--mono);font-size:12px;font-weight:500">--:--:--</div>
+    <div id="date-lbl" style="font-size:9px;color:var(--t3)">—</div>
+  </div>
+</header>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main style="padding:68px 24px 24px;max-width:1600px;margin:0 auto">
+
+<!-- ── STATS ROW ── -->
+<div id="stats-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+  <div class="card" style="padding:16px 18px"><div class="skel" style="width:36px;height:9px;margin-bottom:8px"></div><div class="skel" style="width:56px;height:22px"></div></div>
+  <div class="card" style="padding:16px 18px"><div class="skel" style="width:36px;height:9px;margin-bottom:8px"></div><div class="skel" style="width:56px;height:22px"></div></div>
+  <div class="card" style="padding:16px 18px"><div class="skel" style="width:36px;height:9px;margin-bottom:8px"></div><div class="skel" style="width:56px;height:22px"></div></div>
+  <div class="card" style="padding:16px 18px"><div class="skel" style="width:36px;height:9px;margin-bottom:8px"></div><div class="skel" style="width:56px;height:22px"></div></div>
+</div>
+
+<!-- ── SYSTEMS + AGENTS ── -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+  <!-- Live Systems -->
+  <div>
+    <div class="sec-label">Live Systems</div>
+    <div id="systems-grid" style="display:flex;flex-direction:column;gap:7px">
+      <div class="skel" style="height:44px;border-radius:10px"></div>
+      <div class="skel" style="height:44px;border-radius:10px"></div>
+      <div class="skel" style="height:44px;border-radius:10px"></div>
+    </div>
+  </div>
+
+  <!-- Agent Roster -->
+  <div>
+    <div class="sec-label">Agent Roster</div>
+    <div id="agents-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="skel" style="height:88px;border-radius:10px"></div>
+      <div class="skel" style="height:88px;border-radius:10px"></div>
+      <div class="skel" style="height:88px;border-radius:10px"></div>
+      <div class="skel" style="height:88px;border-radius:10px"></div>
+      <div class="skel" style="height:88px;border-radius:10px"></div>
+      <div class="skel" style="height:88px;border-radius:10px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TASK BOARD ── -->
+<div style="margin-bottom:16px">
+  <div class="between" style="margin-bottom:12px">
+    <div class="sec-label" style="margin:0">Task Board</div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('task-modal')">＋ Add Task</button>
+  </div>
+  <div id="board" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:start"></div>
+</div>
+
+<!-- ── ACTIVITY ── -->
+<div>
+  <div class="between" style="margin-bottom:12px">
+    <div class="sec-label" style="margin:0">Activity Feed</div>
+    <div id="act-filters" class="row" style="gap:6px"></div>
+  </div>
+  <div id="act-list" style="display:flex;flex-direction:column"></div>
+</div>
+</main>
+
+
+<!-- ═══════════════ ADD TASK MODAL ═══════════════ -->
+<div class="overlay" id="task-modal" onclick="if(event.target===this)closeModal('task-modal')">
+  <div class="modal">
+    <div class="between" style="margin-bottom:20px">
+      <span style="font-size:14px;font-weight:600">New Task</span>
+      <button class="btn btn-sm" onclick="closeModal('task-modal')">✕</button>
+    </div>
+    <div class="col" style="gap:12px">
+      <div>
+        <div style="font-size:10px;color:var(--t3);margin-bottom:5px">Title *</div>
+        <input class="inp" id="nt-title" placeholder="Task title" maxlength="120"/>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--t3);margin-bottom:5px">Description</div>
+        <textarea class="inp" id="nt-desc" placeholder="Context, acceptance criteria, links…"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:5px">Assign to</div>
+          <select class="inp" id="nt-agent">
+            <option value="">— unassigned —</option>
+            <option value="engineering_director">Engineering Director</option>
+            <option value="operations_manager">Operations Manager</option>
+            <option value="research_lead">Research Lead</option>
+            <option value="growth_director">Growth Director</option>
+            <option value="content_director">Content Director</option>
+            <option value="chief_of_staff">Chief of Staff</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:5px">Priority</div>
+          <select class="inp" id="nt-priority">
+            <option value="P0">P0 — Critical</option>
+            <option value="P1">P1 — High</option>
+            <option value="P2" selected>P2 — Normal</option>
+            <option value="P3">P3 — Low</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:5px">Project</div>
+          <select class="inp" id="nt-project">
+            <option value="">— none —</option>
+            <option value="Quantara">Quantara</option>
+            <option value="TradeCopilot">TradeCopilot</option>
+            <option value="OptionHABot">OptionHABot</option>
+            <option value="TradingBotA">TradingBotA</option>
+            <option value="CareerPilot">CareerPilot</option>
+            <option value="AI_SNIPP">AI_SNIPP</option>
+            <option value="AI_OS">AI_OS</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--t3);margin-bottom:5px">Assigned by</div>
+          <select class="inp" id="nt-by">
+            <option value="Founder">Founder</option>
+            <option value="chief_of_staff">Chief of Staff</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:20px;justify-content:flex-end;gap:8px">
+      <button class="btn" onclick="closeModal('task-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitTask()">Create Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TASK DETAIL MODAL ═══════════════ -->
+<div class="overlay" id="detail-modal" onclick="if(event.target===this)closeModal('detail-modal')">
+  <div class="modal" id="detail-body"></div>
+</div>
+
+
+<!-- ═══════════════ JS ═══════════════ -->
+<script>
+'use strict';
+
+// ── Config ────────────────────────────────────────
+const POLL_MS = 8000;
+
+// ── Agent metadata ────────────────────────────────
+const AM = {
+  chief_of_staff:       {s:'CoS', c:'#6366f1', d:'rgba(99,102,241,.15)',  label:'Chief of Staff'},
+  engineering_director: {s:'ED',  c:'#10b981', d:'rgba(16,185,129,.15)',  label:'Engineering Dir.'},
+  operations_manager:   {s:'OM',  c:'#f59e0b', d:'rgba(245,158,11,.15)',  label:'Operations Mgr.'},
+  research_lead:        {s:'RL',  c:'#a855f7', d:'rgba(168,85,247,.15)',  label:'Research Lead'},
+  growth_director:      {s:'GD',  c:'#3b82f6', d:'rgba(59,130,246,.15)', label:'Growth Director'},
+  content_director:     {s:'CD',  c:'#ec4899', d:'rgba(236,72,153,.15)', label:'Content Director'},
+};
+
+// ── Project metadata ──────────────────────────────
+const PM = {
+  Quantara:    {c:'#6366f1', d:'rgba(99,102,241,.12)'},
+  TradeCopilot:{c:'#10b981', d:'rgba(16,185,129,.12)'},
+  OptionHABot: {c:'#f59e0b', d:'rgba(245,158,11,.12)'},
+  TradingBotA: {c:'#a855f7', d:'rgba(168,85,247,.12)'},
+  CareerPilot: {c:'#3b82f6', d:'rgba(59,130,246,.12)'},
+  AI_SNIPP:    {c:'#ec4899', d:'rgba(236,72,153,.12)'},
+  AI_OS:       {c:'#6366f1', d:'rgba(99,102,241,.12)'},
+};
+
+// ── Priority ──────────────────────────────────────
+const PRI = {
+  P0:{c:'#ef4444', d:'rgba(239,68,68,.15)',  cls:'p0-l'},
+  P1:{c:'#f97316', d:'rgba(249,115,22,.15)', cls:'p1-l'},
+  P2:{c:'#6366f1', d:'rgba(99,102,241,.15)',cls:'p2-l'},
+  P3:{c:'#52525b', d:'rgba(82,82,91,.2)',   cls:'p3-l'},
+};
+
+// ── Kanban columns ────────────────────────────────
+const COLS = [
+  {key:'in_progress', label:'In Progress', c:'#6366f1'},
+  {key:'blocked',     label:'Blocked',     c:'#ef4444'},
+  {key:'review',      label:'Review',      c:'#f59e0b'},
+  {key:'backlog',     label:'Backlog',     c:'#52525b'},
+  {key:'done',        label:'Done',        c:'#10b981'},
+];
+
+// ── State ─────────────────────────────────────────
+let ST = {agents:[], tasks:[], activity:[], probe:{}, stats:{}, filter:'ALL'};
+let _tid = null; // selected task id
+
+// ── Helpers ───────────────────────────────────────
+const $  = id => document.getElementById(id);
+const set = (id, v) => { const e=$(id); if(e) e.textContent=v; };
+const esc = s => s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
+function ago(s) {
+  if (!s) return '—';
+  const d = Math.floor((Date.now() - new Date(s)) / 1000);
+  if (d < 60) return d + 's';
+  if (d < 3600) return Math.floor(d/60) + 'm';
+  if (d < 86400) return Math.floor(d/3600) + 'h';
+  return Math.floor(d/86400) + 'd';
+}
+function av(id, big) {
+  const m = AM[id] || {s:(id||'??').slice(0,2).toUpperCase(), c:'#6366f1', d:'rgba(99,102,241,.15)'};
+  const sz = big ? '36px;border-radius:10px;font-size:12px' : '28px;border-radius:8px;font-size:9px';
+  return `<div style="width:${sz};height:${big?'36':'28'}px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;flex-shrink:0;background:${m.d};color:${m.c};border:1px solid ${m.c}33">${m.s}</div>`;
+}
+function priBadge(p) {
+  const m = PRI[p] || PRI.P3;
+  return `<span class="badge" style="background:${m.d};color:${m.c}">${p||'—'}</span>`;
+}
+function projBadge(proj) {
+  const m = PM[proj];
+  if (!m) return `<span class="badge" style="background:var(--s3);color:var(--t3)">${esc(proj||'—')}</span>`;
+  return `<span class="badge" style="background:${m.d};color:${m.c}">${esc(proj)}</span>`;
+}
+
+// ── Clock ─────────────────────────────────────────
+function tickClock() {
+  const n = new Date();
+  $('clock').textContent = n.toLocaleTimeString('en-IN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Asia/Kolkata'});
+  $('date-lbl').textContent = n.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',timeZone:'Asia/Kolkata'});
+}
+setInterval(tickClock, 1000); tickClock();
+
+// ── API ───────────────────────────────────────────
+async function api(path, opts={}) {
+  try {
+    const r = await fetch(path, {cache:'no-store', headers:{'Content-Type':'application/json'}, ...opts});
+    return r.ok ? r.json() : null;
+  } catch { return null; }
+}
+
+// ── Render: Stats ──────────────────────────────────
+function renderStats() {
+  const {tasks, agents, probe, activity} = ST;
+  const open    = tasks.filter(t => !['done','archived'].includes(t.status)).length;
+  const p0      = tasks.filter(t => t.priority==='P0' && !['done','archived'].includes(t.status)).length;
+  const active  = agents.filter(a => a.status==='active').length;
+  const sysUp   = Object.values(probe).filter(p => p.up).length;
+  const sysN    = Object.keys(probe).length || 5;
+  const todayAct= activity.filter(a => {
+    const d = new Date(a.created_at), n = new Date();
+    return d.toDateString() === n.toDateString();
+  }).length;
+
+  const cards = [
+    {label:'Open Tasks',     val:open,                 sub:p0>0?`${p0} critical`:'none critical', vc:p0>0?'#ef4444':'#a1a1aa'},
+    {label:'Active Agents',  val:`${active}/6`,        sub:active>0?`working now`:'all idle',     vc:active>0?'#10b981':'#52525b'},
+    {label:'Systems Online', val:`${sysUp}/${sysN}`,   sub:sysUp<sysN?`${sysN-sysUp} offline`:'all healthy', vc:sysUp<sysN?'#f59e0b':'#10b981'},
+    {label:'Activity Today', val:todayAct,             sub:'logged events',                        vc:'#6366f1'},
+  ];
+
+  $('stats-row').innerHTML = cards.map((c,i) => `
+    <div class="card reveal" style="padding:16px 18px;animation-delay:${i*.04}s">
+      <div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:7px">${c.label}</div>
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:${c.vc};line-height:1;margin-bottom:3px">${c.val}</div>
+      <div style="font-size:10px;color:var(--t3)">${c.sub}</div>
+    </div>`).join('');
+
+  // header badges
+  set('hdr-open',    `${open} open`);
+  set('hdr-active',  `${active} active`);
+  set('hdr-systems', `${sysUp}/${sysN} systems`);
+}
+
+// ── Render: Systems ────────────────────────────────
+function renderSystems() {
+  const el = $('systems-grid'); if (!el) return;
+  const probe = ST.probe;
+
+  if (!Object.keys(probe).length) {
+    el.innerHTML = `<div style="font-size:11px;color:var(--t3);padding:10px 0">Probing systems…</div>`;
+    return;
+  }
+
+  const ORDER = ['quantara','optionhabot','tradingbota','tradecopilot','careerpilot'];
+  const rows = ORDER.map(k => probe[k]).filter(Boolean);
+
+  el.innerHTML = rows.map((sys, i) => {
+    const up  = sys.up;
+    const det = sys.detail || {};
+    const sub = up ? (det.engine || det.status || det.mode || 'Running') : 'Offline';
+    return `
+    <div class="card reveal" style="padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;animation-delay:${i*.04}s" onclick="window.open('http://localhost:${sys.port}','_blank')">
+      <div class="dot ${up?'pulse':''}" style="background:${up?'#10b981':'#ef4444'}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${esc(sys.label)}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t3)">:${sys.port} · ${esc(String(sub))}</div>
+      </div>
+      <span class="badge" style="background:${up?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)'};color:${up?'#10b981':'#ef4444'}">${up?'UP':'DOWN'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Render: Agents ──────────────────────────────────
+function renderAgents() {
+  const el = $('agents-grid'); if (!el) return;
+  const {agents} = ST;
+  if (!agents.length) return;
+
+  el.innerHTML = agents.map((a, i) => {
+    const m = AM[a.id] || {s:'??', c:'#6366f1', d:'rgba(99,102,241,.12)', label:a.name};
+    const active = a.status === 'active';
+    return `
+    <div class="card reveal" style="padding:12px;animation-delay:${i*.04}s">
+      <div class="row" style="gap:7px;margin-bottom:7px">
+        <div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:700;flex-shrink:0;background:${m.d};color:${m.c};border:1px solid ${m.c}44">${m.s}</div>
+        <div style="min-width:0;flex:1">
+          <div class="trunc" style="font-size:11px;font-weight:600">${esc(m.label)}</div>
+          <div class="row" style="gap:4px;margin-top:3px">
+            <div class="dot-sm ${active?'pulse':''}" style="background:${active?'#10b981':'#52525b'}"></div>
+            <span style="font-family:var(--mono);font-size:8px;color:${active?'#10b981':'#52525b'}">${active?'ACTIVE':'IDLE'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="trunc2" style="font-size:10px;color:var(--t3);line-height:1.35">${a.current_task_title ? esc(a.current_task_title) : '—'}</div>
+    </div>`;
+  }).join('');
+
+  // Update activity filter buttons
+  const fb = $('act-filters'); if (!fb) return;
+  const opts = [{id:'ALL', s:'All'}, ...agents.map(a => ({id:a.id, s:(AM[a.id]?.s||a.id.slice(0,2).toUpperCase())}))];
+  fb.innerHTML = opts.map(o => {
+    const sel = ST.filter === o.id;
+    return `<button class="btn btn-sm" onclick="setFilter('${o.id}')" style="${sel?'background:var(--s3);color:var(--t1);border-color:var(--s4)':''}" id="af-${o.id}">${o.s}</button>`;
+  }).join('');
+}
+
+// ── Render: Board ──────────────────────────────────
+function renderBoard() {
+  const el = $('board'); if (!el) return;
+  const tasks = ST.tasks.filter(t => t.status !== 'archived');
+
+  el.innerHTML = COLS.map(col => {
+    const items = tasks.filter(t => t.status === col.key)
+      .sort((a,b) => {const o={P0:0,P1:1,P2:2,P3:3}; return (o[a.priority]||3)-(o[b.priority]||3);});
+
+    const cards = items.length
+      ? items.map(t => taskCard(t, col.key)).join('')
+      : `<div style="font-size:10px;color:var(--t4);text-align:center;padding:16px 0">No tasks</div>`;
+
+    return `
+    <div style="background:var(--s1);border:1px solid var(--s3);border-radius:12px;padding:10px">
+      <div class="row" style="margin-bottom:10px;padding:0 2px">
+        <div class="dot" style="background:${col.c}"></div>
+        <span style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:${col.c}">${col.label}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--t3);background:var(--s2);border:1px solid var(--s3);border-radius:4px;padding:1px 6px;margin-left:auto">${items.length}</span>
+        ${col.key==='backlog'?`<button class="btn btn-sm" onclick="openModal('task-modal')" style="margin-left:4px">＋</button>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">${cards}</div>
+    </div>`;
+  }).join('');
+}
+
+function taskCard(t, colKey) {
+  const pm  = PRI[t.priority]  || PRI.P3;
+  const agm = AM[t.assigned_to];
+  const pjm = PM[t.project];
+  return `
+  <div style="background:var(--s2);border:1px solid var(--s3);border-radius:8px;padding:10px 10px 10px 12px;cursor:pointer;transition:border-color .15s;border-left:2px solid ${pm.c}" onclick="openDetail(${t.id})" onmouseenter="this.style.borderColor='var(--s4)'" onmouseleave="this.style.borderColor='${pm.c}'">
+    <div class="row" style="margin-bottom:5px;gap:4px">
+      ${priBadge(t.priority)}
+      ${t.project ? `<span class="badge" style="background:${pjm?.d||'var(--s3)'};color:${pjm?.c||'var(--t3)'}">${esc(t.project)}</span>` : ''}
+      ${agm ? `<div style="width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:7px;font-weight:700;margin-left:auto;background:${agm.d};color:${agm.c};flex-shrink:0">${agm.s}</div>` : ''}
+    </div>
+    <div class="trunc2" style="font-size:11px;font-weight:500;line-height:1.35;color:var(--t1)">${esc(t.title)}</div>
+    ${colKey==='in_progress'?`<button class="btn btn-emerald btn-sm" style="margin-top:7px;font-size:9px" onclick="event.stopPropagation();moveTask(${t.id},'done')">✓ Done</button>`:''}
+    ${colKey==='backlog'?`<button class="btn btn-sm" style="margin-top:7px;font-size:9px" onclick="event.stopPropagation();moveTask(${t.id},'in_progress')">▶ Start</button>`:''}
+  </div>`;
+}
+
+// ── Render: Activity ──────────────────────────────
+function setFilter(f) {
+  ST.filter = f;
+  renderActivity();
+  document.querySelectorAll('[id^="af-"]').forEach(b => {
+    const sel = b.id === 'af-' + f;
+    b.style.background = sel ? 'var(--s3)' : '';
+    b.style.color      = sel ? 'var(--t1)' : '';
+    b.style.borderColor= sel ? 'var(--s4)' : '';
+  });
+}
+
+function renderActivity() {
+  const el = $('act-list'); if (!el) return;
+  let items = ST.activity.slice(0, 30);
+  if (ST.filter !== 'ALL') items = items.filter(a => a.agent === ST.filter);
+
+  if (!items.length) {
+    el.innerHTML = `<div style="font-size:11px;color:var(--t4);text-align:center;padding:28px 0">${ST.filter==='ALL'?'No activity yet':'No activity for this agent'}</div>`;
+    return;
+  }
+
+  el.innerHTML = items.map((a, i) => {
+    const m = AM[a.agent] || {s:'??', c:'#6366f1', d:'rgba(99,102,241,.15)', label:a.agent};
+    return `
+    <div class="fade" style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(39,39,42,.5);animation-delay:${Math.min(i*.02,.3)}s">
+      <div style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;font-weight:700;flex-shrink:0;background:${m.d};color:${m.c};border:1px solid ${m.c}33">${m.s}</div>
+      <div style="flex:1;min-width:0">
+        <div class="row" style="gap:5px;margin-bottom:2px">
+          <span style="font-size:11px;font-weight:500">${esc(m.label)}</span>
+          ${a.task_id ? `<span class="badge" style="background:var(--s2);color:var(--t3)">#${a.task_id}</span>` : ''}
+        </div>
+        <div style="font-size:11px;color:var(--t2);line-height:1.4">${esc(a.action)}</div>
+        ${a.notes ? `<div style="font-size:10px;color:var(--t3);margin-top:2px;line-height:1.3">${esc(a.notes)}</div>` : ''}
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t4);flex-shrink:0;padding-top:1px">${ago(a.created_at)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Task detail modal ─────────────────────────────
+function openDetail(id) {
+  _tid = id;
+  const t = ST.tasks.find(x => x.id === id);
+  if (!t) return;
+  const m   = AM[t.assigned_to];
+  const pjm = PM[t.project];
+  const statOpts = COLS.map(c =>
+    `<button class="btn btn-sm ${t.status===c.key?'btn-primary':''}" onclick="moveTask(${t.id},'${c.key}')">${c.label}</button>`
+  ).join('');
+
+  $('detail-body').innerHTML = `
+    <div class="between" style="margin-bottom:16px">
+      <div class="row" style="gap:8px">
+        ${priBadge(t.priority)}
+        ${t.project ? `<span class="badge" style="background:${pjm?.d||'var(--s3)'};color:${pjm?.c||'var(--t3)'}">${esc(t.project)}</span>` : ''}
+      </div>
+      <button class="btn btn-sm" onclick="closeModal('detail-modal')">✕</button>
+    </div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px;line-height:1.3">${esc(t.title)}</div>
+    <div style="font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:16px">${esc(t.description || 'No description.')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <div style="background:var(--s2);border:1px solid var(--s3);border-radius:8px;padding:10px">
+        <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Assigned to</div>
+        <div class="row" style="gap:6px;font-size:12px;font-weight:500">${m?`<div style="width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;background:${m.d};color:${m.c}">${m.s}</div>`:''}${esc(m?.label||t.assigned_to||'Unassigned')}</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--s3);border-radius:8px;padding:10px">
+        <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Assigned by</div>
+        <div style="font-size:12px;font-weight:500">${esc(t.assigned_by||'Founder')}</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--s3);border-radius:8px;padding:10px">
+        <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Created</div>
+        <div style="font-family:var(--mono);font-size:11px">${(t.created_at||'').slice(0,16)}</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--s3);border-radius:8px;padding:10px">
+        <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Updated</div>
+        <div style="font-family:var(--mono);font-size:11px">${(t.updated_at||'').slice(0,16)}</div>
+      </div>
+    </div>
+    <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Move to</div>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:16px">${statOpts}</div>
+    <div class="row" style="justify-content:flex-end;gap:8px">
+      <button class="btn" onclick="archiveTask(${t.id})">Archive</button>
+      <button class="btn btn-primary" onclick="closeModal('detail-modal')">Close</button>
+    </div>`;
+  openModal('detail-modal');
+}
+
+async function moveTask(id, status) {
+  await api(`/api/tasks/${id}`, {method:'PATCH', body:JSON.stringify({status})});
+  await api('/api/activity', {method:'POST', body:JSON.stringify({agent:'chief_of_staff',action:`Task #${id} → ${status}`,task_id:id})});
+  closeModal('detail-modal');
+  refresh();
+}
+
+async function archiveTask(id) {
+  await api(`/api/tasks/${id}`, {method:'DELETE'});
+  closeModal('detail-modal');
+  refresh();
+}
+
+// ── Add task ──────────────────────────────────────
+async function submitTask() {
+  const title = $('nt-title').value.trim();
+  if (!title) { $('nt-title').focus(); return; }
+  const body = {
+    title,
+    description: $('nt-desc').value.trim(),
+    assigned_to: $('nt-agent').value,
+    assigned_by: $('nt-by').value,
+    project:     $('nt-project').value,
+    priority:    $('nt-priority').value,
+    status:      'backlog',
+  };
+  const r = await api('/api/tasks', {method:'POST', body:JSON.stringify(body)});
+  if (r?.id) {
+    $('nt-title').value = ''; $('nt-desc').value = '';
+    closeModal('task-modal'); refresh();
+  }
+}
+
+// ── Modal helpers ─────────────────────────────────
+function openModal(id)  { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+
+// ── Connection status ─────────────────────────────
+function setConn(ok) {
+  const dot = $('conn-dot'), lbl = $('conn-lbl');
+  if (dot) dot.style.background = ok ? '#10b981' : '#ef4444';
+  if (lbl) { lbl.textContent = ok ? 'LIVE' : 'OFFLINE'; lbl.style.color = ok ? '#10b981' : '#52525b'; }
+}
+
+// ── Refresh ───────────────────────────────────────
+async function refresh() {
+  const [agents, tasks, activity, stats, probe, health] = await Promise.all([
+    api('/api/agents'),
+    api('/api/tasks'),
+    api('/api/activity?limit=40'),
+    api('/api/stats'),
+    api('/api/probe'),
+    api('/health'),
+  ]);
+
+  setConn(!!health);
+
+  if (agents)   ST.agents   = agents;
+  if (tasks)    ST.tasks    = tasks;
+  if (activity) ST.activity = activity;
+  if (stats)    ST.stats    = stats;
+  if (probe)    ST.probe    = probe;
+
+  renderStats();
+  renderSystems();
+  renderAgents();
+  renderBoard();
+  renderActivity();
+}
+
+// ── Keyboard shortcuts ────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.overlay.open').forEach(o => o.classList.remove('open'));
+  }
+  if (e.key === 'n' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+    openModal('task-modal'); setTimeout(() => $('nt-title').focus(), 50);
+  }
+});
+
+// ── Boot ──────────────────────────────────────────
+refresh();
+setInterval(refresh, POLL_MS);
+</script>
+</body>
+</html>

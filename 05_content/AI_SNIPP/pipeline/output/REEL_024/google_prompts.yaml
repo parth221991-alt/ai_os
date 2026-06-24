@@ -1,0 +1,84 @@
+# REEL_024 — Google Omni Flash / Veo 3.1 Clip Prompts
+# Generated: 2026-06-23
+# Formula: F04 — Hidden Tool
+# Topic: Kling AI 2.0 — free image-to-video
+#
+# How prompts differ from Higgsfield format:
+#   - No <<<element_id>>> prefix (character locked via reference image passed in API call)
+#   - No @me — replaced by "The character from the reference image"
+#   - No KINETIC LAYER (text overlays added in FFmpeg assembly instead)
+#   - Character description retained inline for Veo's text conditioning
+#   - Split-screen rendered via explicit panel layout description
+
+clips:
+
+  - clip_number: 1
+    label: "HOOK"
+    duration_seconds: 8
+    script: "This AI tool — takes any photo — literally any photo — and turns it into a video — and nobody told you it's completely free"
+    prompt: |
+      The character from the reference image — preserve exact face, hair curl pattern, glasses, beard — is the subject throughout.
+
+      CHARACTER: Indian male, early-to-mid 30s. Medium-brown skin, warm olive undertones. Dense tight natural coil curls, deep black, high-volume rounded afro crown — full curl density top and sides, NOT faded. Sparse short stubble beard, goatee pattern — mustache and chin strongest, light on cheeks. Bold black rectangular glasses, clear lenses. Dark olive overshirt over black t-shirt.
+
+      SCENE: Medium close-up, 9:16 vertical, eye-level camera angle. Warm creator home studio background — soft-focused bookshelves, warm amber fairy light bokeh orbs, small potted plant, dark condenser microphone on boom arm at frame edge. Warm golden key light from above-front.
+
+      ACTION: The character looks directly into the camera with discovery excitement energy — conspiratorial slight forward lean, as if sharing something found before everyone else. At exactly 1.0 second, a burst of bright electric particle arcs and blue-white lightning bolts radiates outward from the top of the character's head, 0.8 seconds, then dissipates naturally. Character maintains direct eye contact through the effect. Subtle 3% camera push-in over 8 seconds.
+
+      AUDIO: The character delivers this script naturally in a clear, confident Indian English accent: "This AI tool — takes any photo — literally any photo — and turns it into a video — and nobody told you it's completely free". Fast-paced, enthusiastic delivery. Do not repeat any spoken words or phrases.
+
+  - clip_number: 2
+    label: "DEMO PHASE 1"
+    duration_seconds: 6
+    script: "It's called Kling AI — klingai.com — no sign-up complexity — upload any image — I'm dropping a coffee photo in"
+    prompt: |
+      IDENTITY LOCK: Exact same character as Clip 1 reference image. Do not change face, hair, glasses, or beard.
+
+      SCENE: Two-panel split frame, 9:16 vertical.
+
+      TOP PANEL (top 58% of frame): Kling AI web interface, dark mode (klingai.com). Shows an image upload zone with a coffee latte photo being dragged into it — a cup of coffee with latte art on a wooden café table, warm morning light. Upload progress bar showing 100% complete. "Image to Video" tab is selected in the top navigation. Clean dark charcoal UI. The text "klingai.com" is visible in the browser address bar. A badge in the top-right corner reads "66 credits".
+
+      BOTTOM PANEL (bottom 42% of frame): The character fills this panel edge to edge, chest to top of head, face centered. Slightly below eye level. The character glances briefly upward toward the top panel when saying "upload any image", then returns to camera.
+
+      AUDIO: Clear Indian English accent — same voice as Clip 1: "It's called Kling AI — klingai.com — no sign-up complexity — upload any image — I'm dropping a coffee photo in". Natural, efficient delivery. Do not repeat any spoken words or phrases.
+
+  - clip_number: 3
+    label: "DEMO PHASE 2"
+    duration_seconds: 8
+    script: "Hit generate — thirty seconds — the steam rises — the liquid moves — photo became a video — free tier — sixty-six credits a month"
+    prompt: |
+      IDENTITY LOCK: Exact same character as Clip 1 reference image. Do not change face, hair, glasses, or beard.
+
+      SCENE: Two-panel split frame, 9:16 vertical. The top panel transitions mid-clip.
+
+      TOP PANEL (top 58% of frame) — STATE A (seconds 0 to 4): Kling AI dark mode interface showing generation in progress. The uploaded coffee latte photo is visible with a circular progress indicator at 60% and a countdown timer showing "00:17 remaining". Clean dark charcoal UI.
+
+      TOP PANEL (top 58% of frame) — STATE B (seconds 4 to 8): Cross-dissolve to the Kling AI result screen. The generated coffee video is playing — the latte art surface shimmers with subtle liquid motion, steam curls rise slowly from the rim of the cup. A "66 credits remaining" indicator is visible top-right. A green "Download" button is visible bottom-right. The video loops showing the gentle coffee motion.
+
+      BOTTOM PANEL (bottom 42% of frame): The character fills this panel edge to edge. At the STATE B transition (second 4), the character gives a slight impressed nod, holding that expression for 1.5 seconds as the coffee video plays. Brief upward glance toward the top panel at second 4, then returns to direct camera gaze.
+
+      AUDIO: Clear Indian English accent — same voice as Clip 1: "Hit generate — thirty seconds — the steam rises — the liquid moves — photo became a video — free tier — sixty-six credits a month". Calm proof delivery. Do not repeat any spoken words or phrases.
+
+  - clip_number: 4
+    label: "CTA"
+    duration_seconds: 5
+    script: "DM me TOOLS — I'll send you fifty plus free AI tools — just like this one"
+    prompt: |
+      IDENTITY LOCK: Exact same character as Clip 1 reference image. Do not change face, hair, glasses, or beard.
+
+      SCENE: Full frame, no split. 9:16 vertical. The character fills the frame — medium close-up, eye level (NOT below eye level). Warm creator home studio background — same as Clip 1.
+
+      ACTION: Character delivers CTA with peer-to-peer warmth. Slight nod at start. Shoulders relaxed. Open palm forward on the word "DM". Warm, direct close. Static, locked-off framing.
+
+      AUDIO: Clear Indian English accent — warm, direct: "DM me TOOLS — I'll send you fifty plus free AI tools — just like this one". Do not repeat any spoken words or phrases.
+
+# ─── KINETIC LAYER NOTE (for FFmpeg assembly) ─────────────────────────────────
+# Text overlays are NOT baked in by the video model — add in FFmpeg assembly:
+#
+# Clip 1: "ANY PHOTO → VIDEO" white ExtraBold @ ~2s; "COMPLETELY FREE" amber @ ~7s
+# Clip 2: "FREE TOOL" emerald pill badge; "klingai.com" JetBrains Mono label
+# Clip 3: "GENERATING..." amber pill; "✓ VIDEO READY" emerald pill @ 4s transition
+# Clip 4: "TOOLS" bold white condensed caps @ ~1s; "@ai_snipp" lower-third @ ~4s
+#
+# Use FFmpeg drawtext filter in the assembly stage (ffmpeg-assembler.md)
+# OR add manually in Canva/CapCut during caption step (2 min)

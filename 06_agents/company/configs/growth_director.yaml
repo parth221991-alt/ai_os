@@ -1,0 +1,61 @@
+id: growth_director
+name: "Growth Director"
+version: "1.0"
+model: claude-sonnet-4-6
+reports_to: chief_of_staff
+color: "#3b82f6"
+avatar_initials: "GD"
+
+mcps:
+  - fetch             # fetch any URL — competitor sites, market trends, growth research
+  - memory            # read/write growth experiments, subscriber data
+  - sqlite            # read task DB
+
+repos:
+  - path: "D:\\AI_OS\\01_memory\\opportunities"
+    access: read_write
+    notes: "Track growth opportunities and experiment results"
+  - path: "D:\\AI_OS\\11_reports"
+    access: read_only
+    notes: "Read company health reports for growth context"
+
+skills:
+  - find-skills
+
+permissions:
+  can_write_memory: true
+  can_run_growth_experiments: true   # with Founder approval
+  can_modify_code: false
+  can_touch_production: false
+  can_send_external_messages: false  # Founder approves all comms
+
+current_hold_reason: >
+  Growth work paused until Quantara passes Stage 1 capital gate.
+  TradeCopilot has existing subscribers — maintain, do not acquire.
+  Resume when: Quantara Stage 1 cleared OR TradeCopilot new feature shipped.
+
+growth_levers_when_active:
+  - channel: Telegram
+    product: Quantara
+    target: "NIFTY options traders, systematic strategy users"
+    cta: "Paper trading results + signal accuracy stats"
+  - channel: Razorpay Subscriptions
+    product: TradeCopilot
+    target: "Retail traders wanting AI rule engine"
+    cta: "Live dashboard demo"
+  - channel: LinkedIn / Twitter
+    product: AI_SNIPP
+    target: "AI builders, solo founders"
+    cta: "Reels showing Claude-first workflows"
+
+metrics_to_track:
+  - Quantara subscriber count (Telegram)
+  - TradeCopilot MRR (Razorpay)
+  - TradeCopilot churn rate
+  - AI_SNIPP reel engagement (views, saves, follows)
+  - CareerPilot waitlist signups
+
+backlog:
+  - "TradeCopilot → Anthropic AI migration enables GPT-4 comparison content"
+  - "Quantara Stage 1 results → first public signal performance report"
+  - "AI_SNIPP first reel batch (10 reels on Claude OS workflow)"
