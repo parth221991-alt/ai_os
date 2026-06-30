@@ -42,12 +42,17 @@ async def tailor_resume(
 
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
+    jd_section = job_description.strip() if job_description and len(job_description) > 50 else (
+        f"[Full description unavailable — tailor based on job title: {job_title} at {company}. "
+        f"Prioritize these profile keywords: {', '.join(profile_keywords[:15])}]"
+    )
+
     user_content = f"""
 Job Title: {job_title}
 Company: {company}
 
 Job Description:
-{job_description}
+{jd_section}
 
 Profile Keywords to Prioritize:
 {', '.join(profile_keywords)}

@@ -1,9 +1,13 @@
+import html
+import json
+import re
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config import get_yaml_config
 from core.deps import get_db
 from models.database import Job, JobMatchScore
 from scheduler.jobs import run_job_discovery
@@ -69,6 +73,70 @@ async def list_jobs(
 async def get_job(job_id: UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Job).where(Job.id == job_id))
     return result.scalar_one_or_none()
+
+
+@router.post("/{job_id}/fetch-description")
+async def fetch_description(job_id: UUID, db: AsyncSession = Depends(get_db)):
+    """Fetch and store the full job description from the platform listing page.
+
+    LinkedIn guest search captures empty descriptions — this is called on-demand
+    when the user opens the Apply drawer and clicks Tailor with Claude.
+    Uses Playwright so LinkedIn's anti-bot checks are handled like the scraper.
+    """
+    result = await db.execute(select(Job).where(Job.id == job_id))
+    job = result.scalar_one_or_none()
+    if not job:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.description and len(job.description) > 200:
+        return {"description": job.description, "fetched": False}
+
+    description = await _fetch_description_playwright(job.url)
+
+    if description:
+        job.description = description
+        await db.commit()
+
+    return {"description": description, "fetched": bool(description)}
+
+
+async def _fetch_description_playwright(url: str) -> str:
+    """Fetch a job description via a blocking subprocess in a thread pool.
+
+    asyncio.create_subprocess_exec raises NotImplementedError on Windows when uvicorn
+    uses SelectorEventLoop. Using run_in_executor with subprocess.run (blocking) is the
+    correct cross-platform workaround.
+    """
+    import asyncio
+    import json
+    import logging
+    import subprocess
+    import sys
+    from concurrent.futures import ThreadPoolExecutor
+    from pathlib import Path
+
+    logger = logging.getLogger("careerpilot")
+    worker = Path(__file__).resolve().parent.parent / "fetch_description_worker.py"
+    logger.info("fetch_description: worker=%s", worker)
+
+    def _run_blocking() -> str:
+        try:
+            result = subprocess.run(
+                [sys.executable, str(worker), url],
+                capture_output=True, text=True, timeout=60,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return json.loads(result.stdout.strip()) or ""
+            if result.stderr:
+                logger.warning("fetch_description worker stderr: %s", result.stderr[:500])
+        except Exception as exc:
+            logger.warning("fetch_description blocking error: %s", exc)
+        return ""
+
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        return await loop.run_in_executor(pool, _run_blocking)
 
 
 @router.post("/discover", status_code=202)

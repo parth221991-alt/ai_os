@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Progress } from '@/components/ui/progress'
-import { createApplication, tailorResume, getResumeDownloadUrl } from '@/lib/api'
+import { createApplication, tailorResume, fetchJobDescription, getResumeDownloadUrl } from '@/lib/api'
 import type { Job, Profile, Application, TailorResult } from '@/types'
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -72,12 +72,22 @@ export default function ApplyDrawer({
     setTailorState('loading')
     setTailorError('')
     try {
+      // LinkedIn guest search captures no description — fetch it now on demand
+      if (!job.description || job.description.length < 100) {
+        await fetchJobDescription(job.id).catch(() => {/* best-effort */})
+      }
       const result = await tailorResume(profileId, job.id)
       setTailored(result)
       setTailorState('done')
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Tailoring failed'
-      setTailorError(msg.includes('404') ? 'No base resume found for this profile. Upload one in Profiles.' : msg)
+      if (msg.includes('404')) {
+        setTailorError('No base resume found for this profile. Upload one in Profiles.')
+      } else if (msg.includes('401') || msg.includes('authentication')) {
+        setTailorError('Anthropic API key is invalid. Update ANTHROPIC_API_KEY in backend/.env and restart the server.')
+      } else {
+        setTailorError(msg)
+      }
       setTailorState('error')
     }
   }

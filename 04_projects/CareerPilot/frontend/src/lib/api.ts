@@ -60,6 +60,9 @@ export const getJobs = (params: JobsQuery = {}) =>
 export const getJob = (id: string) =>
   req<Job>(`/jobs/${id}`)
 
+export const fetchJobDescription = (id: string) =>
+  req<{ description: string; fetched: boolean }>(`/jobs/${id}/fetch-description`, { method: 'POST' })
+
 export const triggerDiscovery = () =>
   req<{ message: string }>('/jobs/discover', { method: 'POST' })
 
