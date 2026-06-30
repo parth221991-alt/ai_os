@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Clock, CheckCircle2, XCircle, Calendar, Trophy, ArchiveX, ClipboardList } from 'lucide-react'
+import { Clock, CheckCircle2, XCircle, Calendar, Trophy, ArchiveX, ClipboardList, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -164,7 +164,7 @@ export default function Applications() {
           )}
 
           <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 px-5 py-2 border-b border-border text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-            <span>Role</span><span>Platform</span><span>ATS Score</span><span>Applied</span><span>Status</span>
+            <span>Role</span><span>Profile</span><span>ATS Score</span><span>Applied</span><span>Status</span>
           </div>
 
           <div className="divide-y divide-border/40">
@@ -185,7 +185,18 @@ export default function Applications() {
               return (
                 <div key={app.id} className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 px-5 py-3 items-center hover:bg-accent/20 transition-colors">
                   <div className="min-w-0">
-                    <p className="text-sm text-foreground font-medium truncate">{app.job_title}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-foreground font-medium truncate">{app.job_title}</p>
+                      <a
+                        href={app.job_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-muted-foreground hover:text-foreground shrink-0"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-xs text-muted-foreground">{app.company}</p>
                       {app.is_auto_applied && (
@@ -194,7 +205,10 @@ export default function Applications() {
                     </div>
                   </div>
 
-                  <span className="text-xs text-muted-foreground capitalize">{app.platform}</span>
+                  <div className="min-w-0">
+                    <p className="text-xs text-foreground truncate">{app.profile_name ?? '—'}</p>
+                    <p className="text-[10px] text-muted-foreground capitalize">{app.platform}</p>
+                  </div>
 
                   <div className="flex flex-col gap-1">
                     {app.ats_score != null ? (

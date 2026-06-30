@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.deps import get_db
-from models.database import Application, Job, JobStatus, Profile, ResumeVariant
+from models.database import Application, Job, JobStatus, Profile, ResumeVariant  # noqa: F401
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
@@ -29,8 +29,9 @@ async def list_applications(
     db: AsyncSession = Depends(get_db),
 ):
     query = (
-        select(Application, Job)
+        select(Application, Job, Profile)
         .join(Job, Application.job_id == Job.id)
+        .join(Profile, Application.profile_id == Profile.id)
         .order_by(Application.applied_at.desc())
     )
     if status:
@@ -42,12 +43,13 @@ async def list_applications(
     rows = result.all()
 
     output = []
-    for app, job in rows:
+    for app, job, profile in rows:
         d = {c.name: getattr(app, c.name) for c in app.__table__.columns}
         d["job_title"] = job.title
         d["company"] = job.company
         d["job_url"] = job.url
         d["platform"] = job.platform
+        d["profile_name"] = profile.name
         output.append(d)
     return output
 

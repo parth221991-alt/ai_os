@@ -1,6 +1,6 @@
 import type {
   Application, ATSResult, EmailThread, Job,
-  Notification, PipelineCount, Profile,
+  Notification, PipelineCount, Profile, TailorResult,
 } from '@/types'
 
 const BASE = 'http://localhost:8005'
@@ -92,7 +92,7 @@ export const retryApply = (id: string) =>
 // ── Resume ────────────────────────────────────────────────────────────────────
 
 export const tailorResume = (profile_id: string, job_id: string) =>
-  req<object>('/resume/tailor', {
+  req<TailorResult>('/resume/tailor', {
     method: 'POST',
     body: JSON.stringify({ profile_id, job_id }),
   })

@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.deps import get_db
@@ -27,27 +27,42 @@ async def list_jobs(
     result = await db.execute(query)
     jobs = result.scalars().all()
 
-    # Attach match scores if profile_id provided
+    job_ids = [j.id for j in jobs]
+
     if profile_id:
-        job_ids = [j.id for j in jobs]
+        # Specific profile: return that profile's score + matched keywords
         scores_result = await db.execute(
             select(JobMatchScore).where(
                 JobMatchScore.job_id.in_(job_ids),
                 JobMatchScore.profile_id == profile_id,
-                JobMatchScore.score >= min_score,
             )
         )
-        score_map = {s.job_id: s for s in scores_result.scalars().all()}
-        enriched = []
-        for job in jobs:
-            job_dict = {c.name: getattr(job, c.name) for c in job.__table__.columns}
+        score_map: dict = {s.job_id: s for s in scores_result.scalars().all()}
+    else:
+        # All profiles: attach best (max) score across all profiles so column is never blank
+        best_result = await db.execute(
+            select(JobMatchScore.job_id, func.max(JobMatchScore.score).label("best_score"))
+            .where(JobMatchScore.job_id.in_(job_ids))
+            .group_by(JobMatchScore.job_id)
+        )
+        score_map = {row.job_id: row.best_score for row in best_result.all()}
+
+    enriched = []
+    for job in jobs:
+        job_dict = {c.name: getattr(job, c.name) for c in job.__table__.columns}
+        if profile_id:
             score_obj = score_map.get(job.id)
             job_dict["match_score"] = score_obj.score if score_obj else None
             job_dict["matched_keywords"] = score_obj.keyword_matches if score_obj else []
-            enriched.append(job_dict)
-        return enriched
+        else:
+            best = score_map.get(job.id)
+            job_dict["match_score"] = best if best is not None else None
+            job_dict["matched_keywords"] = []
+        if min_score and (job_dict["match_score"] or 0) < min_score:
+            continue
+        enriched.append(job_dict)
 
-    return jobs
+    return enriched
 
 
 @router.get("/{job_id}")

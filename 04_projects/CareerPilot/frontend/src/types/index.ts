@@ -70,6 +70,19 @@ export interface Application {
   company: string
   job_url: string
   platform: Platform
+  profile_name?: string
+}
+
+export interface TailorResult {
+  variant_id: string
+  ats_score: number
+  keyword_coverage: number
+  matched_keywords: string[]
+  missing_keywords: string[]
+  injected_keywords: string[]
+  recommendations: string[]
+  reasoning: string
+  pdf_path: string
 }
 
 export interface ResumeVariant {
