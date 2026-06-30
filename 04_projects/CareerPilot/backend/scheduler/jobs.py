@@ -73,28 +73,33 @@ async def run_job_discovery():
             log.warning("No active profiles found — skipping discovery")
             return
 
-        # Build search queries from all profiles
-        queries: list[str] = []
-        for p in profiles:
-            queries.append(p.title)
-            queries.extend(p.keywords[:3])  # top 3 keywords per profile
-        queries = list(set(queries))
+        # Use profile titles only as search queries — keywords produce too many queries
+        # and make discovery take 10+ minutes in background. Titles are specific enough.
+        queries: list[str] = list({p.title for p in profiles})
+        log.info(f"Discovery queries ({len(queries)}): {queries}")
 
         max_per_platform = cfg["scraper"]["max_jobs_per_platform_per_run"]
         lookback = cfg["scraper"]["lookback_days"]
+        timeout_sec = cfg["scraper"].get("scraper_timeout_sec", 300)
 
         scrapers = [LinkedInScraper(), NaukriScraper(), IndeedScraper()]
         all_scraped = []
         for scraper in scrapers:
             try:
-                jobs = await scraper.scrape(queries, max_jobs=max_per_platform, lookback_days=lookback)
+                jobs = await asyncio.wait_for(
+                    scraper.scrape(queries, max_jobs=max_per_platform, lookback_days=lookback),
+                    timeout=timeout_sec,
+                )
                 all_scraped.extend(jobs)
                 log.info(f"{scraper.platform}: scraped {len(jobs)} jobs")
+            except asyncio.TimeoutError:
+                log.warning(f"{scraper.platform} scraper timed out after {timeout_sec}s — skipping")
             except Exception as e:
                 log.error(f"{scraper.platform} scraper failed: {e}")
 
         # Upsert jobs + score
         new_jobs = 0
+        high_matches: list[tuple[str, str, float, str]] = []  # (title, company, score, url)
         for scraped in all_scraped:
             # Check duplicate
             exists = await session.execute(
@@ -145,14 +150,17 @@ async def run_job_discovery():
                     )
                     session.add(match)
 
-                    # Notify on high match
+                    # Collect high matches — notify as a batch at the end (max 5 per run)
                     if ats.score >= 80:
-                        await notify_high_match_job(
-                            scraped.title, scraped.company, ats.score, scraped.url
-                        )
+                        high_matches.append((scraped.title, scraped.company, ats.score, scraped.url))
 
         await session.commit()
         log.info(f"Discovery complete: {new_jobs} new jobs added")
+
+        # Send at most 5 Telegram notifications per run (top scores only)
+        top_matches = sorted(high_matches, key=lambda x: x[2], reverse=True)[:5]
+        for title, company, score, url in top_matches:
+            await notify_high_match_job(title, company, score, url)
 
 
 async def run_auto_apply():

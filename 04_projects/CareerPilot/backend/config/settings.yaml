@@ -43,8 +43,9 @@ scraper:
   max_jobs_per_platform_per_run: 100
   lookback_days: 3
   user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-  headless: false
+  headless: true
   playwright_timeout_ms: 60000
+  scraper_timeout_sec: 300
 
 resume:
   output_dir: "resumes/variants"

@@ -79,25 +79,43 @@ class IndeedScraper(BaseScraper):
         return jobs
 
     async def _parse_card(self, card) -> ScrapedJob | None:
-        title_el = await card.query_selector("[class*='jobTitle'] a")
-        company_el = await card.query_selector("[data-testid='company-name']")
-        location_el = await card.query_selector("[data-testid='text-location']")
-        snippet_el = await card.query_selector("[class*='underShelfFooter']")
+        # Try multiple selector patterns — Indeed India redesigns frequently
+        title_el = await card.query_selector(
+            "h2.jobTitle a, [class*='jobTitle'] a, a[data-jk], h2 a[id^='job_']"
+        )
+        company_el = await card.query_selector(
+            "[data-testid='company-name'], .companyName, span[class*='companyName']"
+        )
+        location_el = await card.query_selector(
+            "[data-testid='text-location'], .companyLocation, div[class*='companyLocation']"
+        )
+        snippet_el = await card.query_selector(
+            ".job-snippet, [class*='underShelfFooter'], ul[class*='css-'] li"
+        )
 
-        if not title_el:
+        job_id = await card.get_attribute("data-jk") or ""
+        if not job_id:
             return None
 
-        title = (await title_el.inner_text()).strip()
+        title = (await title_el.inner_text()).strip() if title_el else ""
+        if not title:
+            # fallback: any <a> inside the card heading
+            heading = await card.query_selector("h2, h3")
+            title = (await heading.inner_text()).strip() if heading else ""
+        if not title:
+            return None
+
         company = (await company_el.inner_text()).strip() if company_el else ""
         location = (await location_el.inner_text()).strip() if location_el else ""
         snippet = (await snippet_el.inner_text()).strip() if snippet_el else ""
 
-        job_id = await card.get_attribute("data-jk") or ""
         url = f"https://in.indeed.com/viewjob?jk={job_id}"
 
         is_easy = False
         try:
-            easy_el = await card.query_selector("[aria-label='Easily apply']")
+            easy_el = await card.query_selector(
+                "[aria-label='Easily apply'], [class*='indeedApply'], button[class*='indeedApply']"
+            )
             is_easy = easy_el is not None
         except Exception:
             pass
