@@ -1,4 +1,6 @@
-import anthropic
+import json
+
+from groq import AsyncGroq
 from pydantic import BaseModel
 
 from core.config import get_settings, get_yaml_config
@@ -35,7 +37,7 @@ async def classify_email(
     settings = get_settings()
     cfg = get_yaml_config()
 
-    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    client = AsyncGroq(api_key=settings.groq_api_key)
 
     user_content = f"""
 Subject: {subject}
@@ -46,21 +48,16 @@ Classify this email. Return JSON:
 {{"classification": "...", "confidence": 0.0-1.0, "company": "...", "role": "...", "action_required": true/false, "summary": "one sentence"}}
 """
 
-    message = await client.messages.create(
+    response = await client.chat.completions.create(
         model=cfg["ai"]["throughput_model"],
         max_tokens=256,
-        system=[
-            {
-                "type": "text",
-                "text": SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_content},
         ],
-        messages=[{"role": "user", "content": user_content}],
     )
 
-    import json
-    raw = message.content[0].text.strip()
+    raw = response.choices[0].message.content.strip()
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):

@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-import anthropic
+from groq import AsyncGroq
 from pydantic import BaseModel
 
 from core.config import get_settings, get_yaml_config
@@ -40,7 +40,7 @@ async def tailor_resume(
     settings = get_settings()
     cfg = get_yaml_config()
 
-    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    client = AsyncGroq(api_key=settings.groq_api_key)
 
     jd_section = job_description.strip() if job_description and len(job_description) > 50 else (
         f"[Full description unavailable — tailor based on job title: {job_title} at {company}. "
@@ -64,21 +64,16 @@ Tailor this resume for the job above. Return ONLY valid JSON matching the Tailor
 Schema: {json.dumps(TailoredResume.model_json_schema(), indent=2)}
 """
 
-    message = await client.messages.create(
+    response = await client.chat.completions.create(
         model=cfg["ai"]["reasoning_model"],
         max_tokens=cfg["ai"]["max_tokens"],
-        system=[
-            {
-                "type": "text",
-                "text": SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_content},
         ],
-        messages=[{"role": "user", "content": user_content}],
     )
 
-    raw = message.content[0].text.strip()
-    # Strip markdown code fences if present
+    raw = response.choices[0].message.content.strip()
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):

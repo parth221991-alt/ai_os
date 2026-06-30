@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     secret_key: str = Field(..., alias="SECRET_KEY")
     environment: str = Field("development", alias="ENVIRONMENT")
 
-    # Anthropic
-    anthropic_api_key: str = Field(..., alias="ANTHROPIC_API_KEY")
+    # Groq
+    groq_api_key: str = Field(..., alias="GROQ_API_KEY")
 
     # Telegram
     telegram_bot_token: str = Field("", alias="TELEGRAM_BOT_TOKEN")
